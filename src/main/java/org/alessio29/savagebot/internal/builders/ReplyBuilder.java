@@ -1,6 +1,5 @@
 package org.alessio29.savagebot.internal.builders;
 
-import net.dv8tion.jda.api.entities.User;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -46,10 +45,6 @@ public class ReplyBuilder {
             }
         }
         return String.join(NEWLINE, res);
-    }
-
-    public static String mention(User user) {
-        return user.getAsMention();
     }
 
     public static String bold(String message) {

@@ -1,19 +1,12 @@
 package org.alessio29.savagebot.internal.commands;
 
-import net.dv8tion.jda.api.JDA;
 import org.alessio29.savagebot.commands.*;
 
 public class Commands {
 
 	public static void registerDefaultCommands() {
-		registerDefaultCommands(null);
-	}
-
-	public static void registerDefaultCommands(JDA jda) {
 		CommandRegistry registry = CommandRegistry.getInstance();
-		// jda will be used to register Discord commands
-		registry.setJDA(jda);
-		
+
 		// admin commands
 		registry.registerCommandsFromStaticMethods(AdminCommands.class);
 
@@ -43,7 +36,5 @@ public class Commands {
 
 		// music commands
 		registry.registerCommandsFromStaticMethods(MusicCommands.class);
-
-		registry.registerDiscordSlashCommands();
 	}
 }

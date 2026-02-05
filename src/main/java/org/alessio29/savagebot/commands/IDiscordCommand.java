@@ -1,6 +1,5 @@
 package org.alessio29.savagebot.commands;
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.alessio29.savagebot.internal.IMessageReceived;
 import org.alessio29.savagebot.internal.commands.CommandExecutionResult;
 
@@ -13,5 +12,5 @@ public interface IDiscordCommand {
 
     String[] getOptionNames();
 
-    CommandExecutionResult invoke(IMessageReceived<SlashCommandInteractionEvent> event, String[] optionValues) throws Exception;
+    CommandExecutionResult invoke(IMessageReceived event, String[] optionValues) throws Exception;
 }

@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DiscordMessageReceived implements IMessageReceived<MessageReceivedEvent> {
+public class DiscordMessageReceived implements IMessageReceived {
     private final MessageReceivedEvent event;
 
     private final String guildId;
@@ -63,7 +63,7 @@ public class DiscordMessageReceived implements IMessageReceived<MessageReceivedE
     }
 
     @Override
-    public MessageReceivedEvent getOriginalEvent() {
+    public Object getOriginalEvent() {
         return event;
     }
 

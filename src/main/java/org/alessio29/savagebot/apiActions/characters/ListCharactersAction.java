@@ -1,6 +1,5 @@
 package org.alessio29.savagebot.apiActions.characters;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import org.alessio29.savagebot.bennies.BennyType;
 import org.alessio29.savagebot.characters.Character;
 import org.alessio29.savagebot.characters.Characters;

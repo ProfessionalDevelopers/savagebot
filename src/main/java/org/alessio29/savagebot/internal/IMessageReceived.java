@@ -2,7 +2,7 @@ package org.alessio29.savagebot.internal;
 
 import java.util.List;
 
-public interface IMessageReceived<E> {
+public interface IMessageReceived {
 
     String getGuildId();
 
@@ -14,7 +14,7 @@ public interface IMessageReceived<E> {
 
     String getRawMessage();
 
-    E getOriginalEvent();
+    Object getOriginalEvent();
 
     List<String> getMentions();
 

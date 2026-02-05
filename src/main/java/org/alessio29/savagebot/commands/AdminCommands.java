@@ -1,11 +1,11 @@
 package org.alessio29.savagebot.commands;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import org.alessio29.savagebot.SavageBotRunner;
 import org.alessio29.savagebot.apiActions.admin.InfoAction;
 import org.alessio29.savagebot.apiActions.admin.PingAction;
 import org.alessio29.savagebot.apiActions.admin.PrefixAction;
 import org.alessio29.savagebot.internal.IMessageReceived;
+import org.alessio29.savagebot.internal.PlatformAdapter;
 import org.alessio29.savagebot.internal.commands.CommandExecutionResult;
 
 import java.util.ArrayList;
@@ -20,13 +20,14 @@ public class AdminCommands {
             aliases = {},
             arguments = {}
     )
-    public static CommandExecutionResult info(IMessageReceived<MessageReceivedEvent> message, String[] args) {
+    public static CommandExecutionResult info(IMessageReceived message, String[] args) {
         ArrayList<String> arr = new ArrayList<String>(Arrays.asList(args));
-        Integer count = 0;
-        for(JDA jda:  message.getOriginalEvent().getJDA().getShardManager().getShards()) {
-            count+=jda.getGuilds().size();
+        int count = 0;
+        PlatformAdapter adapter = SavageBotRunner.getAdapter();
+        if (adapter != null) {
+            count = adapter.getConnectedWorkspaceCount();
         }
-        arr.add(count.toString());
+        arr.add(String.valueOf(count));
 
         return new InfoAction().doAction(message, arr.toArray(new String[]{}));
     }

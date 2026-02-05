@@ -1,6 +1,5 @@
 package org.alessio29.savagebot.internal.commands;
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.alessio29.savagebot.commands.IDiscordCommand;
 import org.alessio29.savagebot.internal.IMessageReceived;
 
@@ -44,7 +43,7 @@ public class DiscordMethodSlashCommand implements IDiscordCommand {
     }
 
     @Override
-    public CommandExecutionResult invoke(IMessageReceived<SlashCommandInteractionEvent> event, String[] optionValues) throws Exception {
+    public CommandExecutionResult invoke(IMessageReceived event, String[] optionValues) throws Exception {
         return (CommandExecutionResult) method.invoke(methodOwner, event, optionValues);
     }
 }

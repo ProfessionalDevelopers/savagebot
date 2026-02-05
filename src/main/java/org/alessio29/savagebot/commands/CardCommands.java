@@ -1,6 +1,5 @@
 package org.alessio29.savagebot.commands;
 
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.alessio29.savagebot.apiActions.cards.DealCardsAction;
 import org.alessio29.savagebot.apiActions.cards.PutCardsAction;
 import org.alessio29.savagebot.apiActions.cards.ShowCardsAction;
@@ -47,7 +46,7 @@ public class CardCommands {
             aliases = {},
             arguments = {}
     )
-    public static CommandExecutionResult shuffle(IMessageReceived<MessageReceivedEvent> message, String[] args) {
+    public static CommandExecutionResult shuffle(IMessageReceived message, String[] args) {
 
         return new ShuffleCardsAction().doAction(message, args);
     }

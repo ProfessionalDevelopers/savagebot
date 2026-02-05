@@ -1,23 +1,18 @@
 package org.alessio29.savagebot;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
-import net.dv8tion.jda.api.sharding.ShardManager;
 import org.alessio29.savagebot.cards.Decks;
 import org.alessio29.savagebot.cards.Hands;
 import org.alessio29.savagebot.characters.Characters;
 import org.alessio29.savagebot.internal.*;
+import org.alessio29.savagebot.internal.commands.CommandRegistry;
 import org.alessio29.savagebot.internal.commands.Commands;
-
-import javax.security.auth.login.LoginException;
 
 public class SavageBotRunner {
 
 	private static String passwd;
+	private static PlatformAdapter adapter;
 
-	public static void main(String[] args) throws LoginException {
+	public static void main(String[] args) {
 
 		if (args.length < 2) {
 			System.out.println("Parameters must be provided: password token redisHost redisPort redisPass");
@@ -47,14 +42,13 @@ public class SavageBotRunner {
 			}
 		}
 
-		ShardManager shardManager = DefaultShardManagerBuilder.createDefault(token)
-				.addEventListeners(new ParseInputListener(), new DiscordSlashCommandListener())
-				.build();
+		Commands.registerDefaultCommands();
 
-		for (JDA jda : shardManager.getShards()) {
-			Commands.registerDefaultCommands(jda);
-			SelfMentionContainer.initialize(jda.getSelfUser().getAsMention());
-		}
+		adapter = new DiscordAdapter(token);
+		adapter.start();
+		adapter.registerSlashCommands(CommandRegistry.getInstance().getSlashCommandDefinitions());
+
+		SelfMentionContainer.initialize(adapter.getSelfMention());
 	}
 
 	public static boolean passwdOk(String str) {
@@ -64,5 +58,7 @@ public class SavageBotRunner {
 		return passwd.equals(str);
 	}
 
-
+	public static PlatformAdapter getAdapter() {
+		return adapter;
+	}
 }
