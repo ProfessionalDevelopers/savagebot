@@ -16,13 +16,16 @@ SavageBot is a Java application that connects to Discord or Slack (one platform 
 
 ## Quick start (Docker Compose)
 
-1. Copy the example env file and fill in your tokens:
+1. Copy the example files and fill in your tokens:
 
    ```
+   cp docker-compose.example.yml docker-compose.yml
    cp .env.example .env
    ```
 
-2. Start everything:
+2. Edit `.env` with your platform tokens (see [Environment variables](#environment-variables)).
+
+3. Start everything:
 
    ```
    docker compose up -d

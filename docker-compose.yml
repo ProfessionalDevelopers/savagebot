@@ -13,24 +13,8 @@ services:
       - redis
     env_file:
       - .env
-    # Platform is selected by SAVAGEBOT_PLATFORM env var (discord or slack).
-    # Args are assembled by the entrypoint wrapper script.
-    command:
-      - sh
-      - -c
-      - |
-        if [ "$SAVAGEBOT_PLATFORM" = "slack" ]; then
-          exec java -jar savagebot.jar slack \
-            "$SAVAGEBOT_PASSWORD" \
-            "$SLACK_BOT_TOKEN" \
-            "$SLACK_APP_TOKEN" \
-            redis 6379 dummyPass
-        else
-          exec java -jar savagebot.jar \
-            "$SAVAGEBOT_PASSWORD" \
-            "$DISCORD_TOKEN" \
-            redis 6379 dummyPass
-        fi
+    environment:
+      - REDIS_HOST=redis
     restart: unless-stopped
 
 volumes:

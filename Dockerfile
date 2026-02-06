@@ -10,4 +10,5 @@ RUN mvn clean compile assembly:single -DskipTests -q
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/savagebot-*-jar-with-dependencies.jar savagebot.jar
-ENTRYPOINT ["java", "-jar", "savagebot.jar"]
+COPY entrypoint.sh .
+ENTRYPOINT ["./entrypoint.sh"]
