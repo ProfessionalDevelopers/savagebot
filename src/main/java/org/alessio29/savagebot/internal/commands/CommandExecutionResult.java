@@ -1,14 +1,21 @@
 package org.alessio29.savagebot.internal.commands;
 
 public class CommandExecutionResult {
-	
+
 	private String result = "";
 	private int toSkip = 0;
 	private boolean privateMessage = false;
-	
+	private org.alessio29.savagebot.internal.builders.TableData tableData;
+
 	public CommandExecutionResult(String string, int i) {
 		this.result = string;
 		this.toSkip = i;
+	}
+
+	public CommandExecutionResult(String string, int i, org.alessio29.savagebot.internal.builders.TableData tableData) {
+		this.result = string;
+		this.toSkip = i;
+		this.tableData = tableData;
 	}
 
 	public CommandExecutionResult(String string) {
@@ -32,7 +39,7 @@ public class CommandExecutionResult {
 	public String getResult() {
 		return result;
 	}
-	
+
 	public void setResult(String result) {
 		this.result = result;
 	}
@@ -47,6 +54,10 @@ public class CommandExecutionResult {
 
 	private void setPrivateMessage(boolean privateMessage) {
 		this.privateMessage = privateMessage;
+	}
+
+	public org.alessio29.savagebot.internal.builders.TableData getTableData() {
+		return tableData;
 	}
 
 	@Override
