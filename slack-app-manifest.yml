@@ -1,0 +1,57 @@
+_metadata:
+  major_version: 2
+  minor_version: 1
+
+display_information:
+  name: SavageBot
+  description: Dice roller and game aide for Savage Worlds tabletop RPG
+
+settings:
+  socket_mode_enabled: true
+  org_deploy_enabled: false
+  token_rotation_enabled: false
+  event_subscriptions:
+    bot_events:
+      - message.channels
+      - message.groups
+      - message.im
+      - message.mpim
+
+oauth_config:
+  scopes:
+    bot:
+      - commands
+      - chat:write
+      - chat:write.public
+      - channels:history
+      - groups:history
+      - im:history
+      - mpim:history
+      - im:write
+
+features:
+  bot_user:
+    display_name: savagebot
+    always_online: true
+  slash_commands:
+    - command: /roll
+      description: Roll dice (e.g. 2d6+1, s8, 3d10!)
+      usage_hint: "[dice expression]"
+    - command: /fight
+      description: "Start new fight: shuffles deck, resets initiative tracker"
+    - command: /round
+      description: "Start new round: resets initiative tracker, reshuffles if joker was dealt"
+    - command: /init
+      description: Show initiative tracker
+    - command: /drop
+      description: Drop character out of fight
+      usage_hint: "[character name]"
+    - command: /card
+      description: Give one more initiative card to a character
+      usage_hint: "[character name]"
+    - command: /deal
+      description: Deal initiative cards to characters
+      usage_hint: "[name1] [modifiers] ... [nameN] [modifiers]"
+    - command: /hold
+      description: Put character on hold or return to fight
+      usage_hint: "[-]character"
