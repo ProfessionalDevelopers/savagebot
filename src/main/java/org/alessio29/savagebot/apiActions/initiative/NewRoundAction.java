@@ -6,7 +6,6 @@ import org.alessio29.savagebot.characters.Character;
 import org.alessio29.savagebot.characters.Characters;
 import org.alessio29.savagebot.initiative.Rounds;
 import org.alessio29.savagebot.internal.IMessageReceived;
-import org.alessio29.savagebot.internal.builders.TableData;
 import org.alessio29.savagebot.internal.commands.CommandExecutionResult;
 
 import java.util.Set;
@@ -56,7 +55,6 @@ public class NewRoundAction {
             }
             CommandExecutionResult res = new ShowInitiativeAction().doAction(message, args);
             txtMessage += res.getResult();
-            return new CommandExecutionResult(txtMessage, args.length + 1, res.getTableData());
         }
         return new CommandExecutionResult(txtMessage, args.length + 1);
     }

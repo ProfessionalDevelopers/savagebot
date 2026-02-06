@@ -29,6 +29,7 @@ services:
       - SLACK_BOT_TOKEN
       - SLACK_APP_TOKEN
       - REDIS_HOST=redis
+      - LOG_LEVEL
     restart: unless-stopped
 
 volumes:

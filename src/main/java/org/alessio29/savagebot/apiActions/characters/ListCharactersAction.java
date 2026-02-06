@@ -5,16 +5,13 @@ import org.alessio29.savagebot.characters.Character;
 import org.alessio29.savagebot.characters.Characters;
 import org.alessio29.savagebot.internal.IMessageReceived;
 import org.alessio29.savagebot.internal.builders.ReplyBuilder;
-import org.alessio29.savagebot.internal.builders.TableData;
 import org.alessio29.savagebot.internal.commands.CommandExecutionResult;
 import org.alessio29.savagebot.internal.utils.ChannelConfigs;
 import org.alessio29.savagebot.internal.utils.Utils;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 
 public class ListCharactersAction {
 
@@ -52,29 +49,17 @@ public class ListCharactersAction {
                 rightPad("STATES", STATES_SIZE).
                 newLine();
 
-        String[] tableHeaders = {"NAME", "TOKENS", "BENNIES", "STATES"};
-        List<String[]> tableRows = new ArrayList<>();
-
         chars.stream().sorted(new Comparator<Character>() {
             @Override
             public int compare(Character o1, Character o2) {
                 return o1.getName().compareTo(o2.getName());
             }
-        }).forEach(chr -> {
-            tableRows.add(new String[]{
-                    chr.getName(),
-                    String.valueOf(Utils.notNullValue(chr.getTokens())),
-                    chr.getBennyValue(bType),
-                    Utils.notNullValue(chr.getStatesString())
-            });
-            replyBuilder.rightPad(chr.getName(), NAME_SIZE).
-                    rightPad(String.valueOf(Utils.notNullValue(chr.getTokens())), TOKEN_SIZE).
-                    rightPad(chr.getBennyValue(bType), BENNIES_SIZE).
-                    rightPad(Utils.notNullValue(chr.getStatesString()), STATES_SIZE).
-                    newLine();
-        });
+        }).forEach(chr -> replyBuilder.rightPad(chr.getName(), NAME_SIZE).
+                rightPad(String.valueOf(Utils.notNullValue(chr.getTokens())), TOKEN_SIZE).
+                rightPad(chr.getBennyValue(bType), BENNIES_SIZE).
+                rightPad(Utils.notNullValue(chr.getStatesString()), STATES_SIZE).
+                newLine());
         replyBuilder.blockQuote();
-        TableData tableData = new TableData(tableHeaders, tableRows);
-        return new CommandExecutionResult(replyBuilder.toString(), 2, tableData);
+        return new CommandExecutionResult(replyBuilder.toString(), 2);
     }
 }

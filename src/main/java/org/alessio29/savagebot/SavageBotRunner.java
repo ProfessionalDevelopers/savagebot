@@ -105,4 +105,5 @@ public class SavageBotRunner {
 	public static PlatformAdapter getAdapter() {
 		return adapter;
 	}
+
 }
