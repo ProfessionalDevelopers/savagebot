@@ -94,9 +94,13 @@ public class SlackResponseBuilder extends SplittingResponseBuilder {
             for (String[] row : table.getRows()) {
                 JsonArray rowCells = new JsonArray();
                 for (String cellValue : row) {
+                    String val = replaceSuitSymbols(cellValue);
+                    if (val == null || val.isEmpty()) {
+                        val = " ";
+                    }
                     JsonObject cell = new JsonObject();
                     cell.addProperty("type", "raw_text");
-                    cell.addProperty("text", cellValue);
+                    cell.addProperty("text", val);
                     rowCells.add(cell);
                 }
                 jsonRows.add(rowCells);
