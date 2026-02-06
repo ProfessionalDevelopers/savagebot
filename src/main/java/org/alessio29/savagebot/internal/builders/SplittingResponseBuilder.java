@@ -22,11 +22,20 @@ public abstract class SplittingResponseBuilder extends ResponseBuilder {
         String privatePart = this.privatePart.toString();
         String publicPart = this.publicPart.toString();
         if (publicPart.length() > 0 && hasCommandResult) {
-            splitAndSendToOrigin(publicPart);
+            if (pendingTableData != null) {
+                String asMention = getUserMention();
+                sendTableResponse(asMention, publicPart, pendingTableData);
+            } else {
+                splitAndSendToOrigin(publicPart);
+            }
         }
         if (privatePart.length() > 0) {
             splitAndSendPrivate(privatePart);
         }
+    }
+
+    protected void sendTableResponse(String mention, String textFallback, TableData table) {
+        splitAndSendToOrigin(textFallback);
     }
 
     public void reportError(UUID id, String word, Exception e) {

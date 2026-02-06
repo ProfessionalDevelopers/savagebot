@@ -55,6 +55,7 @@ public class NewRoundAction {
             }
             CommandExecutionResult res = new ShowInitiativeAction().doAction(message, args);
             txtMessage += res.getResult();
+            return new CommandExecutionResult(txtMessage, args.length + 1, res.getTableData());
         }
         return new CommandExecutionResult(txtMessage, args.length + 1);
     }

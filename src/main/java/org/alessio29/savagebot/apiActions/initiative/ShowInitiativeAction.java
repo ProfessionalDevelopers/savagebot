@@ -6,6 +6,7 @@ import org.alessio29.savagebot.characters.Characters;
 import org.alessio29.savagebot.initiative.Rounds;
 import org.alessio29.savagebot.internal.IMessageReceived;
 import org.alessio29.savagebot.internal.builders.ReplyBuilder;
+import org.alessio29.savagebot.internal.builders.TableData;
 import org.alessio29.savagebot.internal.commands.CommandExecutionResult;
 import org.alessio29.savagebot.internal.utils.Utils;
 import org.apache.commons.lang.StringUtils;
@@ -64,6 +65,9 @@ public class ShowInitiativeAction {
             cardsSize = Math.max(cardsSize + 2, MIN_CARDS_SIZE);
             statesStize = Math.max(statesStize + 2, MIN_STATES_SIZE);
 
+            String[] tableHeaders = {"NAME [MODS]", "TOKENS", "BENNIES", "STATES", "CARD", "ALL CARDS"};
+            List<String[]> tableRows = new ArrayList<>();
+
             for (Character c : sortedList) {
                 String allCards = c.getInitCards().stream().map(Card::toString).collect(Collectors.joining(", "));
 
@@ -88,6 +92,15 @@ public class ShowInitiativeAction {
                                 ).toString()
                         , BENNIES_SIZE);
 
+                tableRows.add(new String[]{
+                        (c.getName() + holdStatus + " " + edgesString).trim(),
+                        tokensString.trim(),
+                        benniesString.trim(),
+                        c.getStatesString(),
+                        c.getBestCard().toString(),
+                        "[" + allCards + "]"
+                });
+
                 reply.rightPad(c.getName() + holdStatus + " " + edgesString, charNameSize).
                         rightPad(tokensString, TOKENS_SIZE).
                         rightPad(benniesString, BENNIES_SIZE).
@@ -96,7 +109,9 @@ public class ShowInitiativeAction {
                         rightPad("[" + allCards + "]", ALL_CARDS_SIZE).
                         newLine();
             }
-            header.attach(" ========== Round " + round + " ========== ");
+            String tableTitle = "========== Round " + round + " ==========";
+
+            header.attach(" " + tableTitle + " ");
             header.newLine();
             header.rightPad("NAME [MODS]", charNameSize).
                     rightPad("TOKENS", TOKENS_SIZE).
@@ -105,6 +120,10 @@ public class ShowInitiativeAction {
                     rightPad("CARD", cardsSize).
                     rightPad("ALL CARDS", ALL_CARDS_SIZE).
                     newLine();
+
+            reply.newLine().blockQuote();
+            TableData tableData = new TableData(tableTitle, tableHeaders, tableRows);
+            return new CommandExecutionResult(header.toString() + reply.toString(), args.length + 1, tableData);
         } else {
             reply.attach("No cards dealt!");
         }

@@ -4,12 +4,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SlackResponseBuilder extends SplittingResponseBuilder {
+
+    private static final Logger log = LogManager.getLogger(SlackResponseBuilder.class);
 
     public static final int MESSAGE_LENGTH_LIMIT = 4000;
 
@@ -42,25 +46,83 @@ public class SlackResponseBuilder extends SplittingResponseBuilder {
     @Override
     protected void sendReplyToOrigin(String message) {
         try {
-            // Try table conversion first with original symbols intact
-            String tableBlocks = tryBuildTableBlocks(message);
-            if (tableBlocks != null) {
-                String fallback = stripMarkup(message);
-                client.chatPostMessage(r -> r
-                        .channel(channelId)
-                        .blocksAsString(tableBlocks)
-                        .text(fallback)
-                );
-            } else {
-                // Code block fallback: replace suit symbols for monospace alignment
-                String slackMsg = convertToSlackMarkdown(message);
-                client.chatPostMessage(r -> r
-                        .channel(channelId)
-                        .text(slackMsg)
-                );
+            String slackMsg = convertToSlackMarkdown(message);
+            client.chatPostMessage(r -> r
+                    .channel(channelId)
+                    .text(slackMsg)
+            );
+        } catch (IOException | SlackApiException e) {
+            log.error("Failed to send Slack message: {}", e.getMessage(), e);
+        }
+    }
+
+    @Override
+    protected void sendTableResponse(String mention, String textFallback, TableData table) {
+        try {
+            JsonArray blocks = new JsonArray();
+
+            // Section block for mention + title
+            StringBuilder sectionText = new StringBuilder(mention);
+            if (table.getTitle() != null) {
+                sectionText.append("\n*").append(table.getTitle()).append("*");
+            }
+            JsonObject section = new JsonObject();
+            section.addProperty("type", "section");
+            JsonObject text = new JsonObject();
+            text.addProperty("type", "mrkdwn");
+            text.addProperty("text", sectionText.toString());
+            section.add("text", text);
+            blocks.add(section);
+
+            // Table block
+            JsonObject tableBlock = new JsonObject();
+            tableBlock.addProperty("type", "table");
+
+            JsonArray jsonRows = new JsonArray();
+
+            // Header row
+            JsonArray headerCells = new JsonArray();
+            for (String header : table.getHeaders()) {
+                JsonObject cell = new JsonObject();
+                cell.addProperty("type", "raw_text");
+                cell.addProperty("text", header);
+                headerCells.add(cell);
+            }
+            jsonRows.add(headerCells);
+
+            // Data rows
+            for (String[] row : table.getRows()) {
+                JsonArray rowCells = new JsonArray();
+                for (String cellValue : row) {
+                    JsonObject cell = new JsonObject();
+                    cell.addProperty("type", "raw_text");
+                    cell.addProperty("text", cellValue);
+                    rowCells.add(cell);
+                }
+                jsonRows.add(rowCells);
+            }
+            tableBlock.add("rows", jsonRows);
+            blocks.add(tableBlock);
+
+            String blocksJson = blocks.toString();
+            log.debug("Sending Block Kit table: {}", blocksJson);
+
+            String fallback = stripMarkup(textFallback);
+            ChatPostMessageResponse response = client.chatPostMessage(r -> r
+                    .channel(channelId)
+                    .blocksAsString(blocksJson)
+                    .text(fallback)
+            );
+
+            if (!response.isOk()) {
+                log.error("Slack rejected Block Kit table: {}", response.getError());
+                log.debug("Falling back to text for table response");
+                super.sendTableResponse(mention, textFallback, table);
             }
         } catch (IOException | SlackApiException e) {
-            System.err.println("Failed to send Slack message: " + e.getMessage());
+            log.error("Failed to send Slack table: {}", e.getMessage(), e);
+            log.debug("Falling back to text for table response");
+            super.sendTableResponse(mention, textFallback, table);
         }
     }
 
@@ -90,132 +152,6 @@ public class SlackResponseBuilder extends SplittingResponseBuilder {
 
     private static String stripMarkup(String message) {
         return message.replaceAll("```", "").replaceAll("[*_~]", "").trim();
-    }
-
-    // ── Code-block table → Block Kit table conversion ──
-
-    /**
-     * If the message contains a code block that looks like a padded table,
-     * convert it to Block Kit JSON with a table block. Returns null if
-     * the message doesn't contain a parseable table.
-     */
-    String tryBuildTableBlocks(String message) {
-        int blockStart = message.indexOf("```");
-        if (blockStart < 0) return null;
-        int blockEnd = message.indexOf("```", blockStart + 3);
-        if (blockEnd < 0) return null;
-
-        String prefix = message.substring(0, blockStart).trim();
-        String codeContent = message.substring(blockStart + 3, blockEnd).trim();
-
-        String[] lines = codeContent.split("\n");
-        if (lines.length < 2) return null;
-
-        // Separate decorative title lines from table data lines
-        List<String> titleLines = new ArrayList<>();
-        List<String> tableLines = new ArrayList<>();
-        for (String line : lines) {
-            if (line.trim().isEmpty()) continue;
-            if (line.trim().matches("^=+.*=+$")) {
-                titleLines.add(line.trim());
-            } else {
-                tableLines.add(line);
-            }
-        }
-
-        if (tableLines.size() < 2) return null;
-
-        // Detect column boundaries from the header row
-        List<Integer> colStarts = detectColumnStarts(tableLines.get(0));
-        if (colStarts.size() < 2) return null;
-
-        // Parse all rows
-        List<String[]> parsedRows = new ArrayList<>();
-        for (String line : tableLines) {
-            parsedRows.add(extractColumns(line, colStarts));
-        }
-
-        // Build blocks JSON
-        JsonArray blocks = new JsonArray();
-
-        // Section block for mention + title
-        StringBuilder sectionText = new StringBuilder();
-        if (!prefix.isEmpty()) {
-            sectionText.append(prefix);
-        }
-        for (String title : titleLines) {
-            if (sectionText.length() > 0) sectionText.append("\n");
-            sectionText.append("*").append(title).append("*");
-        }
-        if (sectionText.length() > 0) {
-            JsonObject section = new JsonObject();
-            section.addProperty("type", "section");
-            JsonObject text = new JsonObject();
-            text.addProperty("type", "mrkdwn");
-            text.addProperty("text", sectionText.toString());
-            section.add("text", text);
-            blocks.add(section);
-        }
-
-        // Table block
-        JsonObject table = new JsonObject();
-        table.addProperty("type", "table");
-
-        JsonArray jsonRows = new JsonArray();
-        for (String[] row : parsedRows) {
-            JsonArray jsonCells = new JsonArray();
-            for (String cell : row) {
-                JsonObject cellObj = new JsonObject();
-                cellObj.addProperty("type", "raw_text");
-                cellObj.addProperty("text", cell);
-                jsonCells.add(cellObj);
-            }
-            jsonRows.add(jsonCells);
-        }
-        table.add("rows", jsonRows);
-        blocks.add(table);
-
-        return blocks.toString();
-    }
-
-    /**
-     * Detect column start positions from a header line by finding where
-     * non-space text begins after a gap of 2+ spaces.
-     */
-    static List<Integer> detectColumnStarts(String headerLine) {
-        List<Integer> starts = new ArrayList<>();
-        int spaceRun = 0;
-        boolean seenNonSpace = false;
-
-        for (int i = 0; i < headerLine.length(); i++) {
-            if (headerLine.charAt(i) == ' ') {
-                spaceRun++;
-            } else {
-                if (!seenNonSpace || spaceRun >= 2) {
-                    starts.add(i);
-                }
-                seenNonSpace = true;
-                spaceRun = 0;
-            }
-        }
-        return starts;
-    }
-
-    /**
-     * Extract column values from a line using known column start positions.
-     */
-    static String[] extractColumns(String line, List<Integer> colStarts) {
-        String[] cols = new String[colStarts.size()];
-        for (int c = 0; c < colStarts.size(); c++) {
-            int start = colStarts.get(c);
-            int end = (c + 1 < colStarts.size()) ? colStarts.get(c + 1) : line.length();
-            if (start >= line.length()) {
-                cols[c] = "";
-            } else {
-                cols[c] = line.substring(start, Math.min(end, line.length())).trim();
-            }
-        }
-        return cols;
     }
 
     // ── Private messages ──
