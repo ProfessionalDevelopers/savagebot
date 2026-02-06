@@ -41,11 +41,30 @@ public class SlackResponseBuilder extends SplittingResponseBuilder {
         try {
             client.chatPostMessage(r -> r
                     .channel(channelId)
-                    .text(message)
+                    .text(convertToSlackMarkdown(message))
             );
         } catch (IOException | SlackApiException e) {
             System.err.println("Failed to send Slack message: " + e.getMessage());
         }
+    }
+
+    /**
+     * Convert Discord-style markdown to Slack mrkdwn.
+     * Discord: **bold** *italic* __underline__ ~~strike~~
+     * Slack:   *bold*  _italic_ (no underline)  ~strike~
+     */
+    static String convertToSlackMarkdown(String message) {
+        // Underline: __text__ → plain text (no Slack equivalent); handle before italic
+        message = message.replaceAll("__(.+?)__", "$1");
+        // Bold: **text** → placeholder to avoid conflict with italic conversion
+        message = message.replaceAll("\\*\\*(.+?)\\*\\*", "\u0001$1\u0002");
+        // Italic: *text* → _text_
+        message = message.replaceAll("\\*(.+?)\\*", "_$1_");
+        // Restore bold: placeholder → *text*
+        message = message.replaceAll("\u0001(.+?)\u0002", "*$1*");
+        // Strikethrough: ~~text~~ → ~text~
+        message = message.replaceAll("~~(.+?)~~", "~$1~");
+        return message;
     }
 
     @Override
@@ -56,9 +75,10 @@ public class SlackResponseBuilder extends SplittingResponseBuilder {
                             .users(java.util.Collections.singletonList(userId))
                     );
             if (openResult.isOk()) {
+                String slackMessage = convertToSlackMarkdown(message);
                 client.chatPostMessage(r -> r
                         .channel(openResult.getChannel().getId())
-                        .text(message)
+                        .text(slackMessage)
                 );
             }
         } catch (IOException | SlackApiException e) {

@@ -1,0 +1,37 @@
+services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    # Persist to disk every 60s if at least 1 key changed
+    command: redis-server --save 60 1
+    restart: unless-stopped
+
+  bot:
+    build: .
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    # Platform is selected by SAVAGEBOT_PLATFORM env var (discord or slack).
+    # Args are assembled by the entrypoint wrapper script.
+    command:
+      - sh
+      - -c
+      - |
+        if [ "$SAVAGEBOT_PLATFORM" = "slack" ]; then
+          exec java -jar savagebot.jar slack \
+            "$SAVAGEBOT_PASSWORD" \
+            "$SLACK_BOT_TOKEN" \
+            "$SLACK_APP_TOKEN" \
+            redis 6379 dummyPass
+        else
+          exec java -jar savagebot.jar \
+            "$SAVAGEBOT_PASSWORD" \
+            "$DISCORD_TOKEN" \
+            redis 6379 dummyPass
+        fi
+    restart: unless-stopped
+
+volumes:
+  redis-data:
