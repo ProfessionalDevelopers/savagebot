@@ -34,7 +34,7 @@ public class TestInfoCommands {
                         "\n" +
                         "__**DICE category**__\n" +
                         "!ept <level> <hit_die_expression>\n" +
-                        "!r <expression1> ... <expressionN> \n" +
+                        "!r <expression1> ... <expressionN> ; aliases: !roll\n" +
                         "!rh <expression_1> ... <expressionN>\n" +
                         "!rs [<heading_1>] <expression_1> ... [<heading_N>] <expression_N>\n" +
                         "\n" +
@@ -65,14 +65,6 @@ public class TestInfoCommands {
                         "!ping\n" +
                         "!prefix [<character>]\n" +
                         "\n" +
-                        "__**TOKENS category**__\n" +
-                        "!clear <character_name>/all\n" +
-                        "!give <character_name> [<amount of tokens>]\n" +
-                        "!take <character_name> [<amount of tokens>]\n" +
-                        "\n" +
-                        "__**STATES category**__\n" +
-                        "!state <character_name> [clear] [+/-]<state1> [<state2>] [...]; aliases: !st\n" +
-                        "\n" +
                         "__**MUSIC category**__\n" +
                         "!join; aliases: !jn\n" +
                         "!leave; aliases: !lv\n" +
@@ -93,8 +85,7 @@ public class TestInfoCommands {
         Assert.assertEquals(
                 "<< [guildId='test-guild', channelId='test-channel', userId='test-user', isPrivate=false] '!invite'\n" +
                         ">> [guildId: test-guild; channelId: test-channel; userId: test-user]\n" +
-                        "@test-user\n" +
-                        "Invite link: https://discordapp.com/oauth2/authorize?&client_id=448952545784758303&scope=bot&permissions=0",
+                        "@test-user Invite link: https://discordapp.com/oauth2/authorize?&client_id=448952545784758303&scope=bot&permissions=0",
                 TestUtils.processMessages(mp.message("!invite"))
         );
     }

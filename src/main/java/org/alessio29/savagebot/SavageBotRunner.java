@@ -14,33 +14,23 @@ public class SavageBotRunner {
 
 	public static void main(String[] args) {
 
+		if (args.length >= 1 && "slack".equalsIgnoreCase(args[0].trim())) {
+			startSlack(stripFirst(args));
+		} else {
+			startDiscord(args);
+		}
+	}
+
+	private static void startDiscord(String[] args) {
 		if (args.length < 2) {
-			System.out.println("Parameters must be provided: password token redisHost redisPort redisPass");
+			System.out.println("Discord usage: password token [redisHost redisPort redisPass [debug]]");
 			return;
 		}
 		passwd = args[0].trim();
 		String token = args[1].trim();
 
-
-		if (args.length >= 5) {
-			String host = args[2].trim();
-			int port = Integer.parseInt(args[3].trim());
-			String pass = (args[4].equals("dummyPass")) ? null : args[4];
-			RedisClient.setup(host, port, pass);
-			Prefixes.loadFromRedis();
-			Decks.loadFromRedis();
-			Hands.loadFromRedis();
-			Characters.loadFromRedis();
-		} else {
-			System.out.println("Starting without redis, some functionality is unavailable.");
-		}
-
-		if (args.length >= 6) {
-			String debug = args[5].trim();
-			if (debug.equalsIgnoreCase("debug")) {
-				Prefixes.setDebugPrefix();
-			}
-		}
+		setupRedis(args, 2);
+		setupDebug(args, 5);
 
 		Commands.registerDefaultCommands();
 
@@ -49,6 +39,60 @@ public class SavageBotRunner {
 		adapter.registerSlashCommands(CommandRegistry.getInstance().getSlashCommandDefinitions());
 
 		SelfMentionContainer.initialize(adapter.getSelfMention());
+	}
+
+	private static void startSlack(String[] args) {
+		if (args.length < 3) {
+			System.out.println("Slack usage: slack password botToken appToken [redisHost redisPort redisPass [debug]]");
+			return;
+		}
+		passwd = args[0].trim();
+		String botToken = args[1].trim();
+		String appToken = args[2].trim();
+
+		setupRedis(args, 3);
+		setupDebug(args, 6);
+
+		Commands.registerDefaultCommands();
+
+		adapter = new SlackAdapter(botToken, appToken);
+		adapter.start();
+		adapter.registerSlashCommands(CommandRegistry.getInstance().getSlashCommandDefinitions());
+
+		SelfMentionContainer.initialize(adapter.getSelfMention());
+	}
+
+	private static void setupRedis(String[] args, int offset) {
+		if (args.length >= offset + 3) {
+			String host = args[offset].trim();
+			int port = Integer.parseInt(args[offset + 1].trim());
+			String pass = (args[offset + 2].equals("dummyPass")) ? null : args[offset + 2];
+			RedisClient.setup(host, port, pass);
+			Prefixes.loadFromRedis();
+			Decks.loadFromRedis();
+			Hands.loadFromRedis();
+			Characters.loadFromRedis();
+		} else {
+			System.out.println("Starting without redis, some functionality is unavailable.");
+		}
+	}
+
+	private static void setupDebug(String[] args, int index) {
+		if (args.length > index) {
+			String debug = args[index].trim();
+			if (debug.equalsIgnoreCase("debug")) {
+				Prefixes.setDebugPrefix();
+			}
+		}
+	}
+
+	private static String[] stripFirst(String[] args) {
+		if (args.length <= 1) {
+			return new String[0];
+		}
+		String[] result = new String[args.length - 1];
+		System.arraycopy(args, 1, result, 0, result.length);
+		return result;
 	}
 
 	public static boolean passwdOk(String str) {
@@ -61,4 +105,5 @@ public class SavageBotRunner {
 	public static PlatformAdapter getAdapter() {
 		return adapter;
 	}
+
 }

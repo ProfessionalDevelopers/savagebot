@@ -9,6 +9,7 @@ public abstract class ResponseBuilder {
     protected boolean hasCommandResult = false;
     protected final StringBuilder publicPart = new StringBuilder();
     protected final StringBuilder privatePart = new StringBuilder();
+    protected TableData pendingTableData;
 
     public void addRaw(String string) {
         publicPart.append(string);
@@ -25,6 +26,9 @@ public abstract class ResponseBuilder {
         } else  {
             hasCommandResult = true;
             publicPart.append(toAppend);
+            if (result.getTableData() != null) {
+                pendingTableData = result.getTableData();
+            }
         }
     }
 

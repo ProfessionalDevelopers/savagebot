@@ -36,9 +36,7 @@ public class TestCommandsRegistry {
                         "DICE:ept, DICE:r, DICE:rh, DICE:rs, " +
                         "INFO:help, INFO:invite, " +
                         "INITIATIVE:card, INITIATIVE:deal, INITIATIVE:drop, INITIATIVE:fight, INITIATIVE:hold, INITIATIVE:init, INITIATIVE:round, " +
-                        "MUSIC:join, MUSIC:leave, MUSIC:nowplaying, MUSIC:play, MUSIC:queue, MUSIC:skip, MUSIC:stop, " +
-                        "STATES:state, " +
-                        "TOKENS:clear, TOKENS:give, TOKENS:take]",
+                        "MUSIC:join, MUSIC:leave, MUSIC:nowplaying, MUSIC:play, MUSIC:queue, MUSIC:skip, MUSIC:stop]",
                 commands.toString()
         );
     }
@@ -58,7 +56,7 @@ public class TestCommandsRegistry {
                         "\n" +
                         "__**DICE category**__\n" +
                         "!ept <level> <hit_die_expression>\n" +
-                        "!r <expression1> ... <expressionN> \n" +
+                        "!r <expression1> ... <expressionN> ; aliases: !roll\n" +
                         "!rh <expression_1> ... <expressionN>\n" +
                         "!rs [<heading_1>] <expression_1> ... [<heading_N>] <expression_N>\n" +
                         "\n" +
@@ -88,14 +86,6 @@ public class TestCommandsRegistry {
                         "!info\n" +
                         "!ping\n" +
                         "!prefix [<character>]\n" +
-                        "\n" +
-                        "__**TOKENS category**__\n" +
-                        "!clear <character_name>/all\n" +
-                        "!give <character_name> [<amount of tokens>]\n" +
-                        "!take <character_name> [<amount of tokens>]\n" +
-                        "\n" +
-                        "__**STATES category**__\n" +
-                        "!state <character_name> [clear] [+/-]<state1> [<state2>] [...]; aliases: !st\n" +
                         "\n" +
                         "__**MUSIC category**__\n" +
                         "!join; aliases: !jn\n" +

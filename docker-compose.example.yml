@@ -1,0 +1,36 @@
+# Example docker-compose for running SavageBot from Docker Hub.
+#
+# The bot reads its configuration from environment variables.
+# You can provide them via a .env file, your shell environment,
+# or your orchestrator (Cosmos, Portainer, etc).
+#
+#   cp docker-compose.example.yml docker-compose.yml
+#   docker compose up -d
+#
+services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    command: redis-server --save 60 1
+    restart: unless-stopped
+
+  bot:
+    image: zetlen/savagebot:latest
+    depends_on:
+      - redis
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - SAVAGEBOT_PLATFORM
+      - SAVAGEBOT_PASSWORD=changeme
+      - DISCORD_TOKEN
+      - SLACK_BOT_TOKEN
+      - SLACK_APP_TOKEN
+      - REDIS_HOST=redis
+      - LOG_LEVEL
+    restart: unless-stopped
+
+volumes:
+  redis-data:
