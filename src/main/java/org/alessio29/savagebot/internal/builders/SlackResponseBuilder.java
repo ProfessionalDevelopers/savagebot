@@ -64,7 +64,7 @@ public class SlackResponseBuilder extends SplittingResponseBuilder {
             // Section block for mention + title
             StringBuilder sectionText = new StringBuilder(mention);
             if (table.getTitle() != null) {
-                sectionText.append("\n*").append(table.getTitle()).append("*");
+                sectionText.append(" *").append(table.getTitle()).append("*");
             }
             JsonObject section = new JsonObject();
             section.addProperty("type", "section");

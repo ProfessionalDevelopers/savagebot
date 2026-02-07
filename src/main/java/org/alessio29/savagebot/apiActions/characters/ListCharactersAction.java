@@ -1,6 +1,7 @@
 package org.alessio29.savagebot.apiActions.characters;
 
 import org.alessio29.savagebot.bennies.BennyType;
+import org.alessio29.savagebot.cards.Card;
 import org.alessio29.savagebot.characters.Character;
 import org.alessio29.savagebot.characters.Characters;
 import org.alessio29.savagebot.internal.IMessageReceived;
@@ -8,20 +9,14 @@ import org.alessio29.savagebot.internal.builders.ReplyBuilder;
 import org.alessio29.savagebot.internal.builders.TableData;
 import org.alessio29.savagebot.internal.commands.CommandExecutionResult;
 import org.alessio29.savagebot.internal.utils.ChannelConfigs;
-import org.alessio29.savagebot.internal.utils.Utils;
-import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ListCharactersAction {
-
-    private static final int NAME_SIZE = 20;
-    private static final int TOKEN_SIZE = 10;
-    private static final int BENNIES_SIZE = 20;
-    private static final int STATES_SIZE = 35;
 
     public CommandExecutionResult doAction(IMessageReceived message, String[] args) {
 
@@ -31,49 +26,28 @@ public class ListCharactersAction {
         }
         BennyType bType = ChannelConfigs.getChannelConfig(message.getChannelId()).getBennyType();
 
-//        EmbedBuilder eb = new EmbedBuilder();
-//        eb.setTitle("All characters");
-//        eb.addField(StringUtils.rightPad("NAME", NAME_SIZE),
-//                StringUtils.rightPad("TOKENS", TOKEN_SIZE) +StringUtils.rightPad("BENNIES", BENNIES_SIZE) + StringUtils.rightPad("STATES", STATES_SIZE),
-//                true);
-//
-//        chars.stream().sorted((o1, o2) -> o1.getName().compareTo(o2.getName())).
-//                forEach(chr -> replyBuilder.rightPad(chr.getName(), NAME_SIZE).
-//                rightPad(String.valueOf(Utils.notNullValue(chr.getTokens())), TOKEN_SIZE).
-//                rightPad(chr.getBennyValue(bType), BENNIES_SIZE).
-//                rightPad(Utils.notNullValue(chr.getStatesString()), STATES_SIZE).
-//                newLine());
-
         ReplyBuilder replyBuilder = new ReplyBuilder();
-        replyBuilder.blockQuote().
-                rightPad("NAME", NAME_SIZE).
-                rightPad("TOKENS", TOKEN_SIZE).
-                rightPad("BENNIES", BENNIES_SIZE).
-                rightPad("STATES", STATES_SIZE).
-                newLine();
 
-        String[] tableHeaders = {"NAME", "TOKENS", "BENNIES", "STATES"};
+        String[] tableHeaders = {"NAME", "BENNIES", "CARD"};
         List<String[]> tableRows = new ArrayList<>();
 
-        chars.stream().sorted(new Comparator<Character>() {
-            @Override
-            public int compare(Character o1, Character o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        }).forEach(chr -> {
-            tableRows.add(new String[]{
-                    chr.getName(),
-                    String.valueOf(Utils.notNullValue(chr.getTokens())),
-                    chr.getBennyValue(bType),
-                    Utils.notNullValue(chr.getStatesString())
-            });
-            replyBuilder.rightPad(chr.getName(), NAME_SIZE).
-                    rightPad(String.valueOf(Utils.notNullValue(chr.getTokens())), TOKEN_SIZE).
-                    rightPad(chr.getBennyValue(bType), BENNIES_SIZE).
-                    rightPad(Utils.notNullValue(chr.getStatesString()), STATES_SIZE).
-                    newLine();
-        });
-        replyBuilder.blockQuote();
+        List<Character> sorted = chars.stream()
+                .sorted(Comparator.comparing(c -> c.getName().toUpperCase()))
+                .collect(Collectors.toList());
+
+        for (Character chr : sorted) {
+            String name = chr.getName().toUpperCase();
+            String bennies = chr.getBennyValue(bType);
+            Card bestCard = chr.getBestCard();
+            String card = bestCard != null ? bestCard.toString() : "";
+
+            tableRows.add(new String[]{name, bennies, card});
+            replyBuilder.attach(name).attach("  ")
+                    .attach("B:").attach(bennies).attach("  ")
+                    .attach(card).newLine();
+        }
+
+        replyBuilder.newLine();
         TableData tableData = new TableData(tableHeaders, tableRows);
         return new CommandExecutionResult(replyBuilder.toString(), 2, tableData);
     }

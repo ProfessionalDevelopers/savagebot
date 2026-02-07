@@ -147,6 +147,21 @@ public class SlackAdapter implements PlatformAdapter {
                 return;
             }
 
+            // Skip messages from Slackbot (user ID USLACKBOT)
+            String userId = eventObj.has("user") ? eventObj.get("user").getAsString() : null;
+            if ("USLACKBOT".equals(userId)) {
+                return;
+            }
+
+            // Skip thread replies (messages with thread_ts that differs from ts)
+            if (eventObj.has("thread_ts") && !eventObj.get("thread_ts").isJsonNull()) {
+                String threadTs = eventObj.get("thread_ts").getAsString();
+                String ts = eventObj.has("ts") ? eventObj.get("ts").getAsString() : "";
+                if (!threadTs.equals(ts)) {
+                    return;
+                }
+            }
+
             MessageEvent event = gson.fromJson(eventObj, MessageEvent.class);
             System.out.println("[Slack] Message from " + event.getUser()
                     + " in " + event.getChannel() + ": " + event.getText());

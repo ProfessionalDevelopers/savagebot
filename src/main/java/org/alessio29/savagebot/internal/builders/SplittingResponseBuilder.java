@@ -48,12 +48,7 @@ public abstract class SplittingResponseBuilder extends ResponseBuilder {
 
         List<String> messageParts = splitMessage(message, messageLengthLimit - reservedHeaderLength);
 
-        String header;
-        if (message.contains("\n") || messageParts.size() > 1) {
-            header = asMention + ReplyBuilder.NEWLINE;
-        } else {
-            header = asMention + ReplyBuilder.SPACE;
-        }
+        String header = asMention + ReplyBuilder.SPACE;
 
         sendReplyPartsToOrigin(
                 messageParts.stream().map((part) -> header + part).collect(Collectors.toList())
