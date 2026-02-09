@@ -28,22 +28,23 @@ public class Characters {
 
     public static Character getCharacterByName(String guild, String channel, String name) {
         Map<String, Character> map = getCharacters(guild, channel);
-        return map.get(name);
+        return map.get(name.toUpperCase());
     }
 
     public static Character getByNameOrCreate(String guild, String channel, String name) {
         Map<String, Character> map = getCharacters(guild, channel);
-        Character ch = map.get(name);
+        String key = name.toUpperCase();
+        Character ch = map.get(key);
         if (ch == null) {
-            ch = new Character(name);
-            map.put(name, ch);
+            ch = new Character(key);
+            map.put(key, ch);
         }
         return ch;
     }
 
     public static void storeCharacter(String guild, String channel, Character character) {
         Map<String, Character> map = getCharacters(guild, channel);
-        map.put(character.getName(), character);
+        map.put(character.getName().toUpperCase(), character);
         save2Redis();
     }
 
@@ -81,8 +82,9 @@ public class Characters {
 
     public static void removeCharacter(String guildId, String channelId, String charName) {
         Map<String, Character> charMap = getCharacters(guildId, channelId);
-        charMap.remove(charName);
-        removeFromRedis(guildId, channelId, charName);
+        String key = charName.toUpperCase();
+        charMap.remove(key);
+        removeFromRedis(guildId, channelId, key);
     }
 
     public static void removeAllCharacters(String guildId, String channelId) {
@@ -154,7 +156,7 @@ public class Characters {
                     continue;
                 }
                 Map<String, Character> chars = getCharacters(guildId, channelId);
-                chars.put(character.getName(), character);
+                chars.put(character.getName().toUpperCase(), character);
             } catch (Exception e) {
                 log.debug("Error while reading character from Redis storage.", e);
             }

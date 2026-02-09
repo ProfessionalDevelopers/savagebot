@@ -1,13 +1,7 @@
 package org.alessio29.savagebot.internal.commands;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.alessio29.savagebot.commands.*;
+import org.alessio29.savagebot.internal.SlashCommandDefinition;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
@@ -21,7 +15,7 @@ public class CommandRegistry {
 	private final Map<String, ICommand> registeredCommands = new HashMap<>();
 	private final List<IParsingCommand> parsingCommands = new ArrayList<>();
 	private final Map<String, IDiscordCommand> discordCommands = new HashMap<>();
-	private JDA jda;
+	private final List<SlashCommandDefinition> slashCommandDefinitions = new ArrayList<>();
 
 	public void registerCommand(ICommand newCommand) {
 		if (newCommand.getAliases() != null) {
@@ -59,8 +53,6 @@ public class CommandRegistry {
 		return optionNames;
 	}
 
-	private final ArrayList<CommandData> discordSlashCommandsToRegister = new ArrayList<>();
-
 	public void registerCommandsFromMethods(Object methodOwner, Class<?> methodClass) {
 		boolean shouldBeStatic = methodOwner == null;
 
@@ -93,25 +85,9 @@ public class CommandRegistry {
 				discordCommands.put(
 						discordCommandCallback.name(),
 						createDiscordMethodSlashCommand(methodOwner, method, discordCommandCallback));
-				discordSlashCommandsToRegister.add(makeSlashCommandData(discordCommandCallback));
+				slashCommandDefinitions.add(buildSlashCommandDefinition(discordCommandCallback));
 			}
 		}
-	}
-
-	public void registerDiscordSlashCommands() {
-		if (jda == null || discordSlashCommandsToRegister.isEmpty()) {
-			return;
-		}
-		jda.updateCommands().addCommands(discordSlashCommandsToRegister).queue(
-				commands -> {
-					for (Command command : commands) {
-						System.out.println("Registered /-command: " + command.getName());
-					}
-				},
-				throwable -> {
-					throw new RuntimeException("/-command registration failed", throwable);
-				}
-		);
 	}
 
 	@NotNull
@@ -127,27 +103,30 @@ public class CommandRegistry {
 				discordCommandCallback.varargOptionName().length() > 0);
 	}
 
-	private SlashCommandData makeSlashCommandData(DiscordCommandCallback dc) {
-		SlashCommandData slash = Commands.slash(dc.name(), dc.description());
-		DiscordOption[] options = dc.options();
-		int numOptions = options.length;
-		if (dc.varargOptionName().length() > 0) {
-			numOptions += 1;
+	private static SlashCommandDefinition buildSlashCommandDefinition(DiscordCommandCallback dc) {
+		List<SlashCommandDefinition.Option> options = new ArrayList<>();
+		for (DiscordOption opt : dc.options()) {
+			options.add(new SlashCommandDefinition.Option(
+					opt.name(),
+					opt.description(),
+					SlashCommandDefinition.OptionType.STRING,
+					opt.isRequired()
+			));
 		}
-		if (numOptions > 0) {
-			OptionData[] optionData = new OptionData[numOptions];
-			for (int i = 0; i < options.length; ++i) {
-				DiscordOption option = options[i];
-				optionData[i] = new OptionData(option.optionType(), option.name(), option.description());
-			}
-			if (dc.varargOptionName().length() > 0) {
-				optionData[options.length] = new OptionData(OptionType.STRING, dc.varargOptionName(), dc.varargOptionDescription());
-			}
-			slash.addOptions(optionData);
-		}
-		return slash;
+		return new SlashCommandDefinition(
+				dc.name(),
+				dc.description(),
+				options,
+				dc.shouldDefer(),
+				dc.varargOptionName(),
+				dc.varargOptionDescription()
+		);
 	}
-	
+
+	public List<SlashCommandDefinition> getSlashCommandDefinitions() {
+		return Collections.unmodifiableList(slashCommandDefinitions);
+	}
+
 	public static CommandRegistry getInstance() {
 		return INSTANCE;
 	}
@@ -167,10 +146,6 @@ public class CommandRegistry {
 	public void reset() {
 		registeredCommands.clear();
 		parsingCommands.clear();
-	}
-
-	public void setJDA(JDA jda) {
-		this.jda = jda;
 	}
 
 	public IDiscordCommand getDiscordCommand(String commandName) {

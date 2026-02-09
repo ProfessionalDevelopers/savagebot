@@ -22,11 +22,20 @@ public abstract class SplittingResponseBuilder extends ResponseBuilder {
         String privatePart = this.privatePart.toString();
         String publicPart = this.publicPart.toString();
         if (publicPart.length() > 0 && hasCommandResult) {
-            splitAndSendToOrigin(publicPart);
+            if (pendingTableData != null) {
+                String asMention = getUserMention();
+                sendTableResponse(asMention, publicPart, pendingTableData);
+            } else {
+                splitAndSendToOrigin(publicPart);
+            }
         }
         if (privatePart.length() > 0) {
             splitAndSendPrivate(privatePart);
         }
+    }
+
+    protected void sendTableResponse(String mention, String textFallback, TableData table) {
+        splitAndSendToOrigin(textFallback);
     }
 
     public void reportError(UUID id, String word, Exception e) {
@@ -39,12 +48,7 @@ public abstract class SplittingResponseBuilder extends ResponseBuilder {
 
         List<String> messageParts = splitMessage(message, messageLengthLimit - reservedHeaderLength);
 
-        String header;
-        if (message.contains("\n") || messageParts.size() > 1) {
-            header = asMention + ReplyBuilder.NEWLINE;
-        } else {
-            header = asMention + ReplyBuilder.SPACE;
-        }
+        String header = asMention + ReplyBuilder.SPACE;
 
         sendReplyPartsToOrigin(
                 messageParts.stream().map((part) -> header + part).collect(Collectors.toList())

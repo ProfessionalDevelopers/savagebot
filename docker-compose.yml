@@ -1,0 +1,21 @@
+services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    # Persist to disk every 60s if at least 1 key changed
+    command: redis-server --save 60 1
+    restart: unless-stopped
+
+  bot:
+    build: .
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+    restart: unless-stopped
+
+volumes:
+  redis-data:

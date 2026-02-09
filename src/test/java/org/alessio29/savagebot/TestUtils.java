@@ -18,7 +18,7 @@ public class TestUtils {
         return string.trim();
     }
 
-    public static class Message implements IMessageReceived<Message> {
+    public static class Message implements IMessageReceived {
         private final String guildId;
         private final String channelId;
         private final String userId;
@@ -61,7 +61,7 @@ public class TestUtils {
         }
 
         @Override
-        public Message getOriginalEvent() {
+        public Object getOriginalEvent() {
             return this;
         }
 

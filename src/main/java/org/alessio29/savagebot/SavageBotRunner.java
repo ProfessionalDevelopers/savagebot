@@ -1,36 +1,72 @@
 package org.alessio29.savagebot;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
-import net.dv8tion.jda.api.sharding.ShardManager;
 import org.alessio29.savagebot.cards.Decks;
 import org.alessio29.savagebot.cards.Hands;
 import org.alessio29.savagebot.characters.Characters;
 import org.alessio29.savagebot.internal.*;
+import org.alessio29.savagebot.internal.commands.CommandRegistry;
 import org.alessio29.savagebot.internal.commands.Commands;
-
-import javax.security.auth.login.LoginException;
 
 public class SavageBotRunner {
 
 	private static String passwd;
+	private static PlatformAdapter adapter;
 
-	public static void main(String[] args) throws LoginException {
+	public static void main(String[] args) {
 
+		if (args.length >= 1 && "slack".equalsIgnoreCase(args[0].trim())) {
+			startSlack(stripFirst(args));
+		} else {
+			startDiscord(args);
+		}
+	}
+
+	private static void startDiscord(String[] args) {
 		if (args.length < 2) {
-			System.out.println("Parameters must be provided: password token redisHost redisPort redisPass");
+			System.out.println("Discord usage: password token [redisHost redisPort redisPass [debug]]");
 			return;
 		}
 		passwd = args[0].trim();
 		String token = args[1].trim();
 
+		setupRedis(args, 2);
+		setupDebug(args, 5);
 
-		if (args.length >= 5) {
-			String host = args[2].trim();
-			int port = Integer.parseInt(args[3].trim());
-			String pass = (args[4].equals("dummyPass")) ? null : args[4];
+		Commands.registerDefaultCommands();
+
+		adapter = new DiscordAdapter(token);
+		adapter.start();
+		adapter.registerSlashCommands(CommandRegistry.getInstance().getSlashCommandDefinitions());
+
+		SelfMentionContainer.initialize(adapter.getSelfMention());
+	}
+
+	private static void startSlack(String[] args) {
+		if (args.length < 3) {
+			System.out.println("Slack usage: slack password botToken appToken [redisHost redisPort redisPass [debug]]");
+			return;
+		}
+		passwd = args[0].trim();
+		String botToken = args[1].trim();
+		String appToken = args[2].trim();
+
+		setupRedis(args, 3);
+		setupDebug(args, 6);
+
+		Commands.registerDefaultCommands();
+
+		adapter = new SlackAdapter(botToken, appToken);
+		adapter.start();
+		adapter.registerSlashCommands(CommandRegistry.getInstance().getSlashCommandDefinitions());
+
+		SelfMentionContainer.initialize(adapter.getSelfMention());
+	}
+
+	private static void setupRedis(String[] args, int offset) {
+		if (args.length >= offset + 3) {
+			String host = args[offset].trim();
+			int port = Integer.parseInt(args[offset + 1].trim());
+			String pass = (args[offset + 2].equals("dummyPass")) ? null : args[offset + 2];
 			RedisClient.setup(host, port, pass);
 			Prefixes.loadFromRedis();
 			Decks.loadFromRedis();
@@ -39,22 +75,24 @@ public class SavageBotRunner {
 		} else {
 			System.out.println("Starting without redis, some functionality is unavailable.");
 		}
+	}
 
-		if (args.length >= 6) {
-			String debug = args[5].trim();
+	private static void setupDebug(String[] args, int index) {
+		if (args.length > index) {
+			String debug = args[index].trim();
 			if (debug.equalsIgnoreCase("debug")) {
 				Prefixes.setDebugPrefix();
 			}
 		}
+	}
 
-		ShardManager shardManager = DefaultShardManagerBuilder.createDefault(token)
-				.addEventListeners(new ParseInputListener(), new DiscordSlashCommandListener())
-				.build();
-
-		for (JDA jda : shardManager.getShards()) {
-			Commands.registerDefaultCommands(jda);
-			SelfMentionContainer.initialize(jda.getSelfUser().getAsMention());
+	private static String[] stripFirst(String[] args) {
+		if (args.length <= 1) {
+			return new String[0];
 		}
+		String[] result = new String[args.length - 1];
+		System.arraycopy(args, 1, result, 0, result.length);
+		return result;
 	}
 
 	public static boolean passwdOk(String str) {
@@ -64,5 +102,8 @@ public class SavageBotRunner {
 		return passwd.equals(str);
 	}
 
+	public static PlatformAdapter getAdapter() {
+		return adapter;
+	}
 
 }

@@ -19,8 +19,8 @@ public class Character {
 
     private String name;
     private String sawoInitParams;
-    private Integer tokens;
-    private Set<State> states = new HashSet<>();
+    @Deprecated private Integer tokens;
+    @Deprecated private Set<State> states = new HashSet<>();
     private Boolean outOfFight;
     private List<Card> initCards = new ArrayList<>();
     private Card bestCard;
@@ -35,12 +35,12 @@ public class Character {
     }
 
     public Character(String name) {
-        this.name = name;
+        this.name = name != null ? name.toUpperCase() : name;
     }
 
     public Character(String name, String params, DrawCardResult cards) {
         this.setInitCards(cards.getCards());
-        this.name = name;
+        this.name = name != null ? name.toUpperCase() : name;
         this.sawoInitParams = params;
         findBestCard();
     }
@@ -89,7 +89,7 @@ public class Character {
 
     @JsonProperty
     public void setName(String newName) {
-        this.name = newName;
+        this.name = newName != null ? newName.toUpperCase() : newName;
     }
 
     @JsonProperty
@@ -276,20 +276,16 @@ public class Character {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Character character = (Character) o;
-        return name.equals(character.name);
+        return name.equalsIgnoreCase(character.name);
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return name.toUpperCase().hashCode();
     }
 
     @JsonIgnore
     public boolean isEmpty() {
-
-        if (this.tokens != null) {
-            return false;
-        }
 
         if (this.bestCard != null) {
             return false;
@@ -300,10 +296,6 @@ public class Character {
         }
 
         if (this.sawoInitParams != null) {
-            return false;
-        }
-
-        if (this.states != null) {
             return false;
         }
 

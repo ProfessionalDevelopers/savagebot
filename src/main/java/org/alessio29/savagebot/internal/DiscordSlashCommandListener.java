@@ -47,8 +47,8 @@ public class DiscordSlashCommandListener extends ListenerAdapter {
         }
     }
 
-    private IMessageReceived<SlashCommandInteractionEvent> getMessageReceived(final SlashCommandInteractionEvent event) {
-        return new IMessageReceived<SlashCommandInteractionEvent>() {
+    private IMessageReceived getMessageReceived(final SlashCommandInteractionEvent event) {
+        return new IMessageReceived() {
             @Override
             public String getGuildId() {
                 Guild guild = event.getGuild();
@@ -76,7 +76,7 @@ public class DiscordSlashCommandListener extends ListenerAdapter {
             }
 
             @Override
-            public SlashCommandInteractionEvent getOriginalEvent() {
+            public Object getOriginalEvent() {
                 return event;
             }
 

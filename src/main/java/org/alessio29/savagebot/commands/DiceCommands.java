@@ -16,7 +16,7 @@ public class DiceCommands {
                     "Repeated die rolls: `!r 6x4d6k3`\n" +
                     "Inline comments: `!r shooting s8 damage 2d6+1`" +
                     "Just roll them bones (no spaces in expressions): `shooting !s8 damage !2d6+1`",
-            aliases = {},
+            aliases = {"roll"},
             arguments = { "<expression1> ... <expressionN> "}
     )
     @DiscordCommandCallback(
